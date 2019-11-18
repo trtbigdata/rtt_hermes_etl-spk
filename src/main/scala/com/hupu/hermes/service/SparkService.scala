@@ -53,12 +53,16 @@ object SparkService extends Serializable {
           |FROM
           |	etl_flow_monitor WHERE dt = "$today" AND topic = "$topic"
        """.stripMargin
+    // 将查询出来的结果封装到EtlFlowMonitor中
     val etlFlow: EtlFlowMonitor =
       DBUtil.query(sql, new TopicFlowResHandler).asInstanceOf[EtlFlowMonitor]
+    // fromKafka的累加器
     val recordsFromKafka =
       sparkSession.sparkContext.longAccumulator(Constants.ACCU_FROM_KAFKA)
+    // intoKafka的累计器
     val recordsIntoKafka =
       sparkSession.sparkContext.longAccumulator(Constants.ACCU_INTO_KAFKA)
+
     val accumulatorMap = mutable.LinkedHashMap[String, LongAccumulator]()
     if (etlFlow != null) {
       recordsFromKafka.add(etlFlow.getNumFromKafka)
